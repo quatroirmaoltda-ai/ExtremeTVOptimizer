@@ -32,6 +32,11 @@ jobs:
       - name: Extrair projeto Android
         run: unzip -o "ExtremeTVOptimizer_CODIGO_FONTE (1).zip" -d .
 
+      - name: Aplicar implementacao Extreme TV
+        run: |
+          mkdir -p app/src/main/java/br/com/extremetv/optimizer
+          cp overrides/MainActivity.kt app/src/main/java/br/com/extremetv/optimizer/MainActivity.kt
+
       - name: Configurar compatibilidade Java 17
         run: |
           python3 - <<'PY'
