@@ -32,7 +32,7 @@ jobs:
       - name: Extrair projeto Android
         run: unzip -o "ExtremeTVOptimizer_CODIGO_FONTE (1).zip" -d .
 
-      - name: Forcar Java e Kotlin para JVM 17
+      - name: Configurar compatibilidade Java 17
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -40,17 +40,18 @@ jobs:
           if not p.exists():
               raise SystemExit("Arquivo app/build.gradle.kts nao encontrado.")
           s = p.read_text(encoding="utf-8")
-          block = '''
-          android {
-              compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }
-          }
-          '''
-          s += "\\n" + block + "\\n"
-          p.write_text(s, encoding="utf-8")
-          print("Java source/target configurados explicitamente para 17.")
+          block = [
+              "",
+              "android {",
+              "    compileOptions {",
+              "        sourceCompatibility = JavaVersion.VERSION_17",
+              "        targetCompatibility = JavaVersion.VERSION_17",
+              "    }",
+              "}",
+              ""
+          ]
+          p.write_text(s + chr(10).join(block), encoding="utf-8")
+          print("Compatibilidade Java configurada para JVM 17.")
           PY
 
       - name: Compilar APK
