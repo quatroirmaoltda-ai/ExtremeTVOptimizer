@@ -37,6 +37,41 @@ jobs:
           mkdir -p app/src/main/java/br/com/extremetv/optimizer
           cp overrides/MainActivity.kt app/src/main/java/br/com/extremetv/optimizer/MainActivity.kt
 
+      - name: Registrar como launcher Android TV
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          android = "http://schemas.android.com/apk/res/android"
+          ET.register_namespace("android", android)
+          manifests = list(Path("app/src/main").rglob("AndroidManifest.xml"))
+          if not manifests:
+              raise SystemExit("AndroidManifest.xml nao encontrado")
+          p = manifests[0]
+          tree = ET.parse(p)
+          root = tree.getroot()
+          app = root.find("application")
+          if app is None:
+              raise SystemExit("Elemento application nao encontrado")
+          activity = next((a for a in app.findall("activity") if (a.get(f"{{{android}}}name") or "").endswith("MainActivity")), None)
+          if activity is None:
+              raise SystemExit("Activity MainActivity nao encontrada")
+          activity.set(f"{{{android}}}exported", "true")
+          already = any(
+              f.get("android:name") == "android.intent.action.MAIN" and
+              any(c.get(f"{{{android}}}name") == "android.intent.category.HOME" for c in f.findall("category"))
+              for f in activity.findall("intent-filter")
+          )
+          if not already:
+              filt = ET.SubElement(activity, "intent-filter")
+              ET.SubElement(filt, "action", {f"{{{android}}}name": "android.intent.action.MAIN"})
+              ET.SubElement(filt, "category", {f"{{{android}}}name": "android.intent.category.HOME"})
+              ET.SubElement(filt, "category", {f"{{{android}}}name": "android.intent.category.DEFAULT"})
+              ET.SubElement(filt, "category", {f"{{{android}}}name": "android.intent.category.LEANBACK_LAUNCHER"})
+          tree.write(p, encoding="utf-8", xml_declaration=True)
+          print(f"Launcher HOME registrado em {p}")
+          PY
+
       - name: Configurar compatibilidade Java 17
         run: |
           python3 - <<'PY'
