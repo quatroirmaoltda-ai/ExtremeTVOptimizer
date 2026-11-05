@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - main
       - principal
 
 permissions:
@@ -30,6 +31,20 @@ jobs:
 
       - name: Extrair projeto Android
         run: unzip -o "ExtremeTVOptimizer_CODIGO_FONTE (1).zip" -d .
+
+      - name: Alinhar Java e Kotlin em 17
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle.kts")
+          if not p.exists():
+              raise SystemExit("Arquivo app/build.gradle.kts nao encontrado apos extrair o ZIP.")
+          s = p.read_text(encoding="utf-8")
+          s = s.replace("JavaVersion.VERSION_1_8", "JavaVersion.VERSION_17")
+          s = s.replace('jvmTarget = "1.8"', 'jvmTarget = "17"')
+          p.write_text(s, encoding="utf-8")
+          print("Configuracao Java/Kotlin ajustada para 17.")
+          PY
 
       - name: Compilar APK
         run: gradle --no-daemon assembleDebug
