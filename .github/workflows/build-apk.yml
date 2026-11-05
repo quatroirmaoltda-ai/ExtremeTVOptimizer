@@ -62,3 +62,17 @@ jobs:
         with:
           name: ExtremeTVOptimizer-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Auditar estrutura do projeto
+        run: |
+          echo "=== ARQUIVOS EXTRAIDOS ==="
+          find . -maxdepth 5 -type f \
+            ! -path './.git/*' ! -path './.gradle/*' \
+            ! -path './build/*' | sort
+          echo "=== FONTES ANDROID ==="
+          find . -type f \( -name '*.kt' -o -name '*.java' -o -name '*.xml' -o -name '*.gradle' -o -name '*.kts' \) \
+            ! -path './.gradle/*' ! -path './build/*' -print0 |
+          while IFS= read -r -d '' file; do
+            echo "===== $file ====="
+            sed -n '1,260p' "$file"
+          done
